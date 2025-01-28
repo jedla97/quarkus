@@ -55,11 +55,15 @@ public class DefaultDockerContainerLauncher implements DockerContainerArtifactLa
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private Optional<String> entryPoint;
     private List<String> programArgs;
+    private int managementPort;
+    private boolean managementEnabled;
 
     @Override
     public void init(DockerContainerArtifactLauncher.DockerInitContext initContext) {
         this.httpPort = initContext.httpPort();
         this.httpsPort = initContext.httpsPort();
+        this.managementPort = initContext.managementPort();
+        this.managementEnabled = initContext.managementEnabled();
         this.waitTimeSeconds = initContext.waitTime().getSeconds();
         this.testProfile = initContext.testProfile();
         this.argLine = initContext.argLine();
@@ -106,6 +110,9 @@ public class DefaultDockerContainerLauncher implements DockerContainerArtifactLa
         if (httpsPort == 0) {
             httpsPort = getRandomPort();
         }
+        if (managementEnabled && managementPort == 0) {
+            managementPort = getRandomPort();
+        }
 
         final List<String> args = new ArrayList<>();
         args.add(containerRuntimeBinaryName);
@@ -126,6 +133,10 @@ public class DefaultDockerContainerLauncher implements DockerContainerArtifactLa
         args.add(httpPort + ":" + httpPort);
         args.add("-p");
         args.add(httpsPort + ":" + httpsPort);
+        if (managementEnabled) {
+            args.add("-p");
+            args.add(managementPort + ":" + managementPort);
+        }
         if (entryPoint.isPresent()) {
             args.add("--entrypoint");
             args.add(entryPoint.get());
@@ -149,6 +160,9 @@ public class DefaultDockerContainerLauncher implements DockerContainerArtifactLa
             // This won't be correct when using the random port, but it's really only used by us for the rest client tests
             // in the main module, since those tests hit the application itself
             args.addAll(toEnvVar("test.url", TestHTTPResourceManager.getUri()));
+        }
+        if (managementEnabled) {
+            args.addAll(toEnvVar("quarkus.management.port", "" + httpsPort));
         }
         if (testProfile != null) {
             args.addAll(toEnvVar("quarkus.profile", testProfile));

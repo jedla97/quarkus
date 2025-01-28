@@ -3,6 +3,7 @@ package io.quarkus.test.junit.launcher;
 import static io.quarkus.test.junit.ArtifactTypeUtil.isContainer;
 import static io.quarkus.test.junit.ArtifactTypeUtil.isJar;
 import static io.quarkus.test.junit.IntegrationTestUtil.DEFAULT_HTTPS_PORT;
+import static io.quarkus.test.junit.IntegrationTestUtil.DEFAULT_MANAGEMENT_PORT;
 import static io.quarkus.test.junit.IntegrationTestUtil.DEFAULT_PORT;
 
 import java.time.Duration;
@@ -86,6 +87,8 @@ public class DockerContainerLauncherProvider implements ArtifactLauncherProvider
         launcher.init(new DefaultDockerInitContext(
                 config.getValue("quarkus.http.test-port", OptionalInt.class).orElse(DEFAULT_PORT),
                 config.getValue("quarkus.http.test-ssl-port", OptionalInt.class).orElse(DEFAULT_HTTPS_PORT),
+                config.getValue("quarkus.management.test-port", OptionalInt.class).orElse(DEFAULT_MANAGEMENT_PORT),
+                config.getValue("quarkus.management.enabled", Boolean.class),
                 testConfig.waitTime(),
                 testConfig.integrationTestProfile(),
                 testConfig.argLine().orElse(List.of()),
@@ -156,8 +159,11 @@ public class DockerContainerLauncherProvider implements ArtifactLauncherProvider
         private final List<String> programArgs;
         private Map<String, String> labels;
         private Map<String, String> volumeMounts;
+        private int managementPort;
+        private boolean managementEnabled;
 
-        public DefaultDockerInitContext(int httpPort, int httpsPort, Duration waitTime, String testProfile,
+        public DefaultDockerInitContext(int httpPort, int httpsPort, int managementPort, boolean managementEnabled,
+                Duration waitTime, String testProfile,
                 List<String> argLine, Map<String, String> env,
                 ArtifactLauncher.InitContext.DevServicesLaunchResult devServicesLaunchResult,
                 String containerImage, boolean pullRequired,
@@ -172,6 +178,8 @@ public class DockerContainerLauncherProvider implements ArtifactLauncherProvider
             this.volumeMounts = volumeMounts;
             this.entryPoint = entryPoint;
             this.programArgs = programArgs;
+            this.managementPort = managementPort;
+            this.managementEnabled = managementEnabled;
         }
 
         @Override
@@ -207,6 +215,16 @@ public class DockerContainerLauncherProvider implements ArtifactLauncherProvider
         @Override
         public List<String> programArgs() {
             return programArgs;
+        }
+
+        @Override
+        public int managementPort() {
+            return managementPort;
+        }
+
+        @Override
+        public boolean managementEnabled() {
+            return managementEnabled;
         }
     }
 }

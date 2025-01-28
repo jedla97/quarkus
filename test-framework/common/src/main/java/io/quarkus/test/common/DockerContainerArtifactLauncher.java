@@ -21,5 +21,9 @@ public interface DockerContainerArtifactLauncher extends ArtifactLauncher<Docker
         Optional<String> entryPoint();
 
         List<String> programArgs();
+
+        int managementPort();
+
+        boolean managementEnabled();
     }
 }

@@ -58,6 +58,7 @@ public final class IntegrationTestUtil {
 
     public static final int DEFAULT_PORT = 8081;
     public static final int DEFAULT_HTTPS_PORT = 8444;
+    public static final int DEFAULT_MANAGEMENT_PORT = 9001;
 
     private IntegrationTestUtil() {
     }
